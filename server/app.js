@@ -7,16 +7,46 @@ require('dotenv').config();
 
 const connectDB = require('./config/db');
 const { errorHandler, notFound } = require('./middlewares/errorMiddleware');
+const Admin = require('./models/Admin');
 
 // Initialize app
 const app = express();
 
-// Connect to Database
-connectDB();
+// Connect to Database & Seed Admin
+const initDB = async () => {
+    try {
+        await connectDB();
+
+        // Seed Admin if credentials provided in .env
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const adminPassword = process.env.ADMIN_PASSWORD;
+
+        if (adminEmail && adminPassword) {
+            const adminExists = await Admin.findOne({ email: adminEmail });
+            if (!adminExists) {
+                await Admin.create({
+                    name: 'System Admin',
+                    email: adminEmail,
+                    password: adminPassword,
+                    role: 'Admin'
+                });
+                console.log(`[SEED] Admin account created for: ${adminEmail}`);
+            }
+        }
+    } catch (error) {
+        console.error('Database/Seeding error:', error.message);
+    }
+};
+initDB();
 
 // Middlewares
 app.use(helmet()); // Security headers
-app.use(cors()); // Enable CORS
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production'
+        ? [process.env.FRONTEND_URL, 'https://vikalp-crm.vercel.app']
+        : true,
+    credentials: true
+})); // Secure CORS
 app.use(morgan('dev')); // Logging
 app.use(express.json()); // Body parser
 
