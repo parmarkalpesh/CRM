@@ -102,245 +102,101 @@ const downloadInvoicePDF = asyncHandler(async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="Invoice_${invoice.invoiceNumber}.pdf"`);
     doc.pipe(res);
 
-    // Colors
     const colors = {
         black: '#000000',
-        gray900: '#111827',
         gray600: '#4b5563',
         gray500: '#6b7280',
-        gray100: '#f3f4f6',
     };
 
-    // Header with simple branding
-    doc.fillColor(colors.black)
-        .fontSize(24)
-        .font('Helvetica-Bold')
-        .text('Vikalp Electronics', 50, 45);
+    // Header
+    doc.fontSize(28).font('Helvetica-Bold').text('Vikalp Electronics', { align: 'left' });
+    doc.fontSize(10).font('Helvetica').text('SALES & SERVICE SPECIALIST', { align: 'left', textOptions: { letterSpacing: 2 } });
 
-    doc.fontSize(10)
-        .font('Helvetica-Bold')
-        .fillColor(colors.gray600)
-        .text('SALES & SERVICE SPECIALIST', 50, 75, { characterSpacing: 2 });
+    // Invoice title - right aligned
+    doc.fontSize(40).font('Helvetica-Bold').text('INVOICE', { align: 'right' });
 
-    // Shop Details in Header
-    doc.fontSize(8)
-        .font('Helvetica')
-        .fillColor(colors.gray500)
-        .text('Murlidhar Nagar 1, Gokul Nagar, Jamnagar-361004', 50, 92)
-        .text('Mo: +91 9374170929 / +91 7016223029', 50, 104);
+    doc.moveTo(50, 110).lineTo(545, 110).stroke();
 
-    // Invoice Title
-    doc.fontSize(36)
-        .font('Helvetica-Bold')
-        .fillColor(colors.gray100)
-        .text('INVOICE', 350, 45, { align: 'right' });
+    // Bill to and Invoice Details section
+    doc.fontSize(10).font('Helvetica-Bold').text('BILL TO:', 50, 130);
+    doc.fontSize(12).font('Helvetica-Bold').text(invoice.customer?.name || 'N/A', 50, 150);
+    doc.fontSize(10).font('Helvetica').text(invoice.customer?.address || '', 50, 170);
+    doc.fontSize(10).font('Helvetica-Bold').text(`Phone: ${invoice.mobile}`, 50, 190);
 
-    doc.moveTo(50, 120)
-        .lineTo(545, 120)
-        .lineWidth(2)
-        .strokeColor(colors.black)
-        .stroke();
-
-    // Bill To & Invoice Info
-    const infoY = 145;
-    doc.fillColor(colors.gray600)
-        .fontSize(9)
-        .font('Helvetica-Bold')
-        .text('BILL TO:', 50, infoY);
-
-    doc.fillColor(colors.black)
-        .fontSize(12)
-        .font('Helvetica-Bold')
-        .text(invoice.customer?.name || 'Customer Name', 50, infoY + 15);
-
+    // Invoice details - right side
+    doc.fontSize(10).font('Helvetica').text(`Invoice #: ${invoice.invoiceNumber}`, 350, 130);
     doc.fontSize(10)
         .font('Helvetica')
-        .fillColor(colors.gray600)
-        .text(invoice.customer?.address || '', 50, infoY + 32, { width: 250 });
-
-    doc.fontSize(10)
-        .font('Helvetica-Bold')
-        .fillColor(colors.black)
-        .text(`Phone: ${invoice.mobile}`, 50, infoY + 55);
-
-    // Right side info
-    doc.fillColor(colors.gray600)
-        .fontSize(9)
-        .font('Helvetica-Bold')
-        .text('INVOICE DETAILS:', 350, infoY);
-
-    doc.fillColor(colors.black)
-        .fontSize(10)
-        .font('Helvetica')
-        .text(`Invoice Number:`, 350, infoY + 15)
-        .font('Helvetica-Bold')
-        .text(`#${invoice.invoiceNumber}`, 450, infoY + 15, { align: 'right' });
-
-    doc.font('Helvetica')
-        .text(`Invoice Date:`, 350, infoY + 30)
-        .font('Helvetica-Bold')
-        .text(`${new Date(invoice.invoiceDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`, 420, infoY + 30, { align: 'right' });
+        .text(`Date: ${new Date(invoice.invoiceDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`, 350, 150);
 
     // Amount Due Box
-    doc.rect(350, infoY + 55, 195, 45)
-        .fillColor(colors.gray100)
-        .fill();
-
-    doc.fillColor(colors.black)
-        .fontSize(9)
-        .font('Helvetica-Bold')
-        .text('GRAND TOTAL:', 360, infoY + 63);
-
-    doc.fontSize(18)
-        .font('Helvetica-Bold')
-        .text(`INR ${invoice.grandTotal?.toLocaleString()}`, 360, infoY + 78);
+    doc.rect(350, 185, 195, 35).stroke();
+    doc.fontSize(9).font('Helvetica-Bold').text('AMOUNT DUE:', 360, 193);
+    doc.fontSize(16).font('Helvetica-Bold').text(`₹ ${invoice.grandTotal?.toLocaleString()}`, 360, 210);
 
     // Table Header
-    const tableTop = 270; // Moved up slightly
+    const tableTop = 250;
     const col1X = 50;
-    const col2X = 350;
-    const col3X = 420;
+    const col2X = 380;
+    const col3X = 430;
     const col4X = 500;
 
-    doc.fillColor(colors.black)
-        .fontSize(9)
-        .font('Helvetica-Bold');
+    doc.fontSize(9).font('Helvetica-Bold').text('SERVICE DESCRIPTION', col1X, tableTop);
+    doc.text('QTY', col2X, tableTop);
+    doc.text('UNIT PRICE', col3X, tableTop);
+    doc.text('TOTAL', col4X, tableTop, { align: 'right' });
 
-    doc.text('SERVICE DESCRIPTION', col1X, tableTop);
-    doc.text('QTY', col2X, tableTop, { width: 40, align: 'center' });
-    doc.text('UNIT PRICE', col3X, tableTop, { width: 70, align: 'right' });
-    doc.text('TOTAL', col4X, tableTop, { width: 45, align: 'right' });
+    // Table line
+    doc.moveTo(50, tableTop + 15).lineTo(545, tableTop + 15).stroke();
 
-    doc.moveTo(50, tableTop + 12)
-        .lineTo(545, tableTop + 12)
-        .lineWidth(1)
-        .strokeColor(colors.black)
-        .stroke();
-
-    // Table Rows
-    let yPosition = tableTop + 20;
-    invoice.items?.forEach((item, index) => {
-        const itemHeight = doc.heightOfString(item.serviceName, { width: 280 });
-
-        doc.fontSize(9) // Smaller font for items
-            .font('Helvetica-Bold')
-            .fillColor(colors.black)
-            .text(item.serviceName, col1X, yPosition, { width: 280 });
-
-        doc.font('Helvetica')
-            .text(item.quantity.toString(), col2X, yPosition, { width: 40, align: 'center' });
-
-        doc.text(`${item.unitPrice?.toLocaleString()}`, col3X, yPosition, { width: 70, align: 'right' });
-
-        doc.font('Helvetica-Bold')
-            .text(`${item.lineTotal?.toLocaleString()}`, col4X, yPosition, { width: 45, align: 'right' });
-
-        yPosition += Math.max(itemHeight, 12) + 8; // Tighter vertical spacing
-
-        // Row separator
-        doc.moveTo(50, yPosition - 4)
-            .lineTo(545, yPosition - 4)
-            .lineWidth(0.5)
-            .strokeColor(colors.gray100)
-            .stroke();
+    // Table rows
+    let yPosition = tableTop + 25;
+    invoice.items?.forEach((item) => {
+        doc.fontSize(10).font('Helvetica').text(item.serviceName, col1X, yPosition, { width: 300 });
+        doc.text(item.quantity.toString(), col2X, yPosition);
+        doc.text(`₹ ${item.unitPrice?.toLocaleString()}`, col3X, yPosition);
+        doc.text(`₹ ${item.lineTotal?.toLocaleString()}`, col4X, yPosition, { align: 'right' });
+        yPosition += 25;
     });
 
-    // Summary Section - Compacted
-    const summaryX = 350;
-    yPosition += 5;
+    // Summary section
+    const summaryStartY = yPosition + 10;
+    doc.moveTo(50, summaryStartY).lineTo(545, summaryStartY).stroke();
 
-    doc.fillColor(colors.gray600)
-        .fontSize(9)
-        .font('Helvetica')
-        .text('Subtotal:', summaryX, yPosition);
-    doc.fillColor(colors.black)
-        .text(`${invoice.subtotal?.toLocaleString()}`, col4X, yPosition, { width: 45, align: 'right' });
-
-    yPosition += 15;
-    doc.fillColor(colors.gray600)
-        .text('Tax (GST):', summaryX, yPosition);
-    doc.fillColor(colors.black)
-        .text(`${invoice.gstTotal?.toLocaleString()}`, col4X, yPosition, { width: 45, align: 'right' });
+    yPosition = summaryStartY + 15;
+    doc.fontSize(10).font('Helvetica');
+    doc.text('Subtotal:', 350, yPosition);
+    doc.text(`₹ ${invoice.subtotal?.toLocaleString()}`, 500, yPosition, { align: 'right' });
 
     yPosition += 20;
-    doc.moveTo(summaryX, yPosition - 2)
-        .lineTo(545, yPosition - 2)
-        .lineWidth(1)
-        .strokeColor(colors.black)
-        .stroke();
+    doc.text('Tax (GST):', 350, yPosition);
+    doc.text(`₹ ${invoice.gstTotal?.toLocaleString()}`, 500, yPosition, { align: 'right' });
 
-    doc.fontSize(11)
-        .font('Helvetica-Bold')
-        .text('GRAND TOTAL:', summaryX, yPosition);
-    doc.text(`INR ${invoice.grandTotal?.toLocaleString()}`, col4X, yPosition, { width: 45, align: 'right' });
+    yPosition += 25;
+    doc.fontSize(12).font('Helvetica-Bold');
+    doc.text('GRAND TOTAL:', 350, yPosition);
+    doc.text(`₹ ${invoice.grandTotal?.toLocaleString()}`, 500, yPosition, { align: 'right' });
 
-    // Footer
-    const footerY = 730;
-
-    // Bottom Branding Section
-    doc.rect(50, footerY - 5, 495, 0.5)
-        .fillColor(colors.gray200)
-        .fill();
-
-    doc.fillColor(colors.black)
-        .fontSize(9)
-        .font('Helvetica-Bold')
-        .text('NOTES & INSTRUCTIONS:', 50, footerY + 5);
-
-    doc.fontSize(8)
+    // Footer section
+    const footerY = 720;
+    doc.fontSize(9).font('Helvetica-Bold').text('NOTES & INSTRUCTIONS:', 50, footerY);
+    doc.fontSize(9)
         .font('Helvetica')
-        .fillColor(colors.gray600);
-
-    const notes = [
-        '1. This is a computer generated invoice and does not require a physical signature.',
-        '2. Service warranty applies as per company policy from the date of invoice.'
-    ];
-
-    notes.forEach((note, i) => {
-        doc.text(note, 50, footerY + 18 + (i * 10));
-    });
-
-    // Authorized Signatory
-    doc.fillColor(colors.black)
-        .font('Helvetica-Bold')
-        .fontSize(10)
-        .text('FOR, VIKALP ELECTRONICS', 350, footerY + 35, { align: 'right' });
-
-    doc.fontSize(8)
+        .text('1. This is a computer generated invoice and does not require a physical signature.', 50, footerY + 18, { width: 480 });
+    doc.fontSize(9)
         .font('Helvetica')
-        .text('Authorized Signatory', 350, footerY + 85, { align: 'right' });
-
-    // Shop Info Footer - Stick to bottom
-    const bottomBarY = 805;
-    doc.rect(0, bottomBarY, 612, 38)
-        .fillColor(colors.black)
-        .fill();
-
-    doc.fillColor('#ffffff')
-        .fontSize(10)
-        .font('Helvetica-Bold')
-        .text('Vikalp Electronics', 0, bottomBarY + 8, { align: 'center', width: 612 });
-
-    doc.fontSize(7.5)
+        .text('2. Service warranty applies as per company policy from the date of invoice.', 50, footerY + 36, { width: 480 });
+    doc.fontSize(9)
         .font('Helvetica')
-        .text('Murlidhar Nagar 1, Gokul Nagar, Jamnagar-361004 | Mo: +91 9374170929 / +91 7016223029', 0, bottomBarY + 22, { align: 'center', width: 612 });
+        .text('3. Please quote the invoice number for any future correspondence.', 50, footerY + 54, { width: 480 });
+
+    // Contact info
+    doc.fontSize(10).font('Helvetica-Bold').text('Payment via UPI: 9374170929@ybl', 50, footerY + 80);
+    doc.fontSize(9)
+        .font('Helvetica')
+        .text('GokulNagar, Jamnagar | +91 9374170929 | vikalp.electronics@gmail.com', 50, footerY + 100, { align: 'center', width: 495 });
 
     doc.end();
-});
-
-// @desc    Delete invoice
-// @route   DELETE /api/invoices/:id
-// @access  Private/Admin
-const deleteInvoice = asyncHandler(async (req, res) => {
-    const invoice = await Invoice.findById(req.params.id);
-
-    if (invoice) {
-        await Invoice.deleteOne({ _id: req.params.id });
-        res.json({ message: 'Invoice removed' });
-    } else {
-        res.status(404);
-        throw new Error('Invoice not found');
-    }
 });
 
 module.exports = {
@@ -348,5 +204,4 @@ module.exports = {
     getInvoices,
     getInvoiceById,
     downloadInvoicePDF,
-    deleteInvoice,
 };
