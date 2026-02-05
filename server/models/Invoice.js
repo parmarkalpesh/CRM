@@ -19,8 +19,11 @@ const invoiceSchema = mongoose.Schema(
         items: [
             {
                 serviceName: { type: String, required: true },
+                hsnCode: { type: String, default: '' },
                 quantity: { type: Number, required: true },
                 unitPrice: { type: Number, required: true },
+                per: { type: String, default: 'Pcs' },
+                discount: { type: Number, default: 0 },
                 gstPercent: { type: Number, required: true },
                 lineTotal: { type: Number, required: true },
             },
