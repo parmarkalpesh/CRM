@@ -1,7 +1,7 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
+  "description": "Backend API for Vikalp CRM - Electronics & Refrigeration Management System",
   "main": "index.js",
   "scripts": {
     "start": "node app.js",
