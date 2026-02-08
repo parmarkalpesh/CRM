@@ -308,9 +308,25 @@ const downloadInvoicePDF = asyncHandler(async (req, res) => {
     doc.end();
 });
 
+// @desc    Delete invoice
+// @route   DELETE /api/invoices/:id
+// @access  Private/Admin
+const deleteInvoice = asyncHandler(async (req, res) => {
+    const invoice = await Invoice.findById(req.params.id);
+
+    if (invoice) {
+        await invoice.deleteOne();
+        res.json({ message: 'Invoice removed' });
+    } else {
+        res.status(404);
+        throw new Error('Invoice not found');
+    }
+});
+
 module.exports = {
     createInvoice,
     getInvoices,
     getInvoiceById,
     downloadInvoicePDF,
+    deleteInvoice,
 };

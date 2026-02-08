@@ -5,11 +5,12 @@ const {
     getInvoices,
     getInvoiceById,
     downloadInvoicePDF,
+    deleteInvoice,
 } = require('../controllers/invoiceController');
 const { protect } = require('../middlewares/authMiddleware');
 
 router.route('/').post(protect, createInvoice).get(protect, getInvoices);
-router.route('/:id').get(protect, getInvoiceById);
-router.route('/:id/download-pdf').get(protect, downloadInvoicePDF);
+router.route('/:id').get(protect, getInvoiceById).delete(protect, deleteInvoice);
+router.route('/:id/download-pdf').get(downloadInvoicePDF);
 
 module.exports = router;
